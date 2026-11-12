@@ -1,0 +1,53 @@
+# ── Maven ────────────────────────────────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+
+# ── Allure ───────────────────────────────────────────────────────────────────
+# Local trend history (CI uses pipeline artifacts instead)
+allure-history/
+# Temporary screenshot output generated on test failure
+target/screenshots/
+
+# ── Playwright ───────────────────────────────────────────────────────────────
+.playwright/
+.playwright-mcp/
+
+# ── Claude Code tooling ──────────────────────────────────────────────────────
+# Project-level Claude Code settings and agent definitions (machine-specific)
+# Note: CLAUDE.md is intentionally committed — it is project documentation
+.claude/
+
+# ── IDE — IntelliJ IDEA ──────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ── IDE — VS Code ────────────────────────────────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ── IDE — Eclipse ────────────────────────────────────────────────────────────
+.classpath
+.project
+.settings/
+bin/
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Environment / secrets ────────────────────────────────────────────────────
+# Real config with credentials — copy from config.properties.example to create locally
+src/main/resources/config.properties
+.env
+.env.*
+*.properties.local
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+target/logs/

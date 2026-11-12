@@ -1,0 +1,181 @@
+name: Automation Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      cross_browser:
+        description: 'Run Firefox + WebKit tests (in addition to Chromium)'
+        type: boolean
+        default: false
+
+jobs:
+  test:
+    name: "Tests [${{ matrix.shard }}]"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: ui
+            suite: testng-shard-ui.xml
+            needs-browser: true
+          - shard: api
+            suite: testng-shard-api.xml
+            needs-browser: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Playwright browsers
+        if: matrix.needs-browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('pom.xml') }}
+          restore-keys: playwright-chromium-${{ runner.os }}-
+
+      - name: Install Playwright Chromium
+        if: matrix.needs-browser
+        run: mvn exec:java -e -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
+
+      - name: Run tests - ${{ matrix.shard }}
+        run: |
+          mvn test \
+            -DsuiteXmlFile=src/test/resources/${{ matrix.suite }} \
+            -Dheadless=true \
+            -Dbrowser=chromium \
+            -Dui.username=${{ secrets.UI_USERNAME }} \
+            -Dui.password=${{ secrets.UI_PASSWORD }}
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "firefox,webkit"
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ matrix.shard }}
+          path: target/allure-results/
+          retention-days: 7
+
+      - name: Upload Surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-${{ matrix.shard }}
+          path: target/surefire-reports/
+          retention-days: 3
+
+  test-crossbrowser:
+    name: "Tests [cross-browser]"
+    runs-on: ubuntu-latest
+    if: github.event.inputs.cross_browser == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Cache Playwright browsers (all)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-all-${{ runner.os }}-${{ hashFiles('pom.xml') }}
+          restore-keys: playwright-all-${{ runner.os }}-
+
+      - name: Install all Playwright browsers
+        run: mvn exec:java -e -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps"
+
+      - name: Run cross-browser tests (Chromium + Firefox + WebKit)
+        run: |
+          mvn test \
+            -DsuiteXmlFile=src/test/resources/testng-crossbrowser.xml \
+            -Dheadless=true \
+            -Dui.username=${{ secrets.UI_USERNAME }} \
+            -Dui.password=${{ secrets.UI_PASSWORD }}
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-crossbrowser
+          path: target/allure-results/
+          retention-days: 7
+
+      - name: Upload Surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-crossbrowser
+          path: target/surefire-reports/
+          retention-days: 3
+
+  report:
+    name: Generate Allure Report
+    needs: [test, test-crossbrowser]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Restore Allure history
+        uses: actions/cache@v4
+        with:
+          path: allure-history
+          key: allure-history-${{ github.ref_name }}-${{ github.run_number }}
+          restore-keys: allure-history-${{ github.ref_name }}-
+
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-*
+          merge-multiple: true
+          path: target/allure-results/
+
+      - name: Inject trend history
+        run: |
+          if [ -d allure-history ]; then
+            cp -r allure-history/. target/allure-results/history/
+          fi
+
+      - name: Generate Allure report
+        run: mvn allure:report
+
+      - name: Save Allure history
+        run: |
+          mkdir -p allure-history
+          cp -r target/site/allure-maven-plugin/history/. allure-history/ 2>/dev/null || true
+
+      - name: Upload Allure HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: target/site/allure-maven-plugin/
+          retention-days: 30

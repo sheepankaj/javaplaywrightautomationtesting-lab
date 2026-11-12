@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Parallel Local Suite" parallel="classes" thread-count="4" verbose="1">
+
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+    </listeners>
+
+    <test name="UI Tests - Parallel">
+        <groups>
+            <run>
+                <include name="ui"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.automation.tests.ui.LoginTest"/>
+            <class name="com.automation.tests.ui.InventoryTest"/>
+            <class name="com.automation.tests.ui.CheckoutTest"/>
+        </classes>
+    </test>
+
+    <test name="API Tests">
+        <groups>
+            <run>
+                <include name="api"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.automation.tests.api.UserApiTest"/>
+        </classes>
+    </test>
+
+</suite>

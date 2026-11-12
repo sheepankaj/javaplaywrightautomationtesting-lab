@@ -1,0 +1,22 @@
+# Copy this file to config.properties and fill in your values.
+# config.properties is gitignored — never commit credentials.
+
+browser=chromium
+headless=false
+slowMo=0
+timeout=30000
+viewport.width=1280
+viewport.height=720
+
+ui.base.url=https://www.saucedemo.com
+ui.username=standard_user
+ui.password=secret_sauce
+
+api.base.url=https://jsonplaceholder.typicode.com
+api.test.user.id=2
+api.expected.name=Ervin Howell
+api.expected.username=Antonette
+api.expected.email=Shanna@melissa.tv
+
+screenshot.on.failure=true
+screenshot.dir=target/screenshots
