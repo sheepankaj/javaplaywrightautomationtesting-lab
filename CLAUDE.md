@@ -27,7 +27,7 @@ Java 17 + Maven automation framework with two concerns:
 - All existing suites remain backward-compatible — when no `browser` parameter is in the XML, `setUp` falls back to `AppConfig.getBrowser()` (reads `browser=` from config.properties)
 - API tests are excluded from cross-browser (they use no browser)
 - Requires all browsers pre-installed: `mvn exec:java ... -Dexec.args="install"`
-- `BrowserFactory.createBrowser(playwright, browserType)` accepts the explicit browser name; `createBrowser(playwright)` delegates to config
+- `BrowserFactory.createBrowser(playwright, browserType)` is the only factory method — always pass the browser type explicitly
 
 ## Test suites
 

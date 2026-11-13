@@ -230,6 +230,22 @@ Run N+1 → report job restores history/ from cache → injects into allure-resu
 
 The cache key uses `github.ref_name` so each branch maintains its own independent trend line. No manual steps needed — it is fully automatic in the pipeline.
 
+### Viewing the CI Allure report
+
+The `allure-report` artifact is a static HTML app that **must be served over HTTP** — opening `index.html` directly as a `file://` URL shows a blank "Loading..." screen because browsers block JavaScript `fetch()` calls for local files.
+
+After downloading and extracting the artifact:
+
+```bash
+# Option 1 — Python (no install needed)
+cd allure-report
+python -m http.server 8080
+# Open http://localhost:8080
+
+# Option 2 — Allure CLI
+npx allure open allure-report
+```
+
 ### Other pipeline behaviours
 
 - Playwright Chromium is cached between runs (keyed on `pom.xml` hash — invalidated on dependency change)

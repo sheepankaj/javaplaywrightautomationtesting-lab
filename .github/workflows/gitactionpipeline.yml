@@ -51,6 +51,9 @@ jobs:
         if: matrix.needs-browser
         run: mvn exec:java -e -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
 
+      - name: Create config from example
+        run: cp src/main/resources/config.properties.example src/main/resources/config.properties
+
       - name: Run tests - ${{ matrix.shard }}
         run: |
           mvn test \
@@ -103,6 +106,9 @@ jobs:
 
       - name: Install all Playwright browsers
         run: mvn exec:java -e -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps"
+
+      - name: Create config from example
+        run: cp src/main/resources/config.properties.example src/main/resources/config.properties
 
       - name: Run cross-browser tests (Chromium + Firefox + WebKit)
         run: |
